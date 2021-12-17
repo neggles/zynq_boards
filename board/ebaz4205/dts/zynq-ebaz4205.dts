@@ -1,0 +1,190 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (C) 2021 Michael Walle <michael@walle.cc>
+ */
+/dts-v1/;
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/leds/common.h>
+/include/ "zynq-7000.dtsi"
+
+/ {
+	model = "Ebang EBAZ4205";
+	compatible = "ebang,ebaz4205", "xlnx,zynq-7000";
+
+	aliases {
+		ethernet0 = &gem0;
+		serial0 = &uart1;
+		mmc0 = &sdhci0;
+		nand0 = &nand0;
+	};
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x0 0x10000000>;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+
+	leds {
+		compatible = "gpio-leds";
+
+		led-1 {
+			label = "led-green";
+			function = LED_FUNCTION_STATUS;
+			color = LED_COLOR_ID_GREEN;
+			default-state = "off";
+			linux,default-trigger = "heartbeat";
+			gpios = <&gpio0 55 GPIO_ACTIVE_LOW>;
+		};
+		led-0 {
+			label = "led-red";
+			function = LED_FUNCTION_BOOT;
+			color = LED_COLOR_ID_RED;
+			default-state = "off";
+			gpios = <&gpio0 54 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	buttons {
+		compatible = "gpio-keys-polled";
+		poll-interval = <100>;
+
+		s2-button {
+			gpios = <&gpio0 20 GPIO_ACTIVE_LOW>;
+			label = "s2-button";
+			default-state = "keep";
+			linux,code = <106>;
+			autorepeat;
+		};
+		s3-button {
+			gpios = <&gpio0 32 GPIO_ACTIVE_LOW>;
+			label = "s3-button";
+			default-state = "keep";
+			linux,code = <105>;
+			autorepeat;
+		};
+	};
+
+};
+
+&clkc {
+	ps-clk-frequency = <33333333>;
+	fclk-enable = <8>;
+};
+
+&gem0 {
+	status = "okay";
+	phy-mode = "mii";
+	phy-handle = <&phy>;
+
+	/* PHY clock */
+	assigned-clocks = <&clkc 18>;
+	assigned-clock-rates = <25000000>;
+
+	phy: ethernet-phy@0 {
+		reg = <0>;
+	};
+};
+
+&gpio0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_gpio0_default>;
+};
+
+&nfc0 {
+	status = "okay";
+
+	nand@0 {
+		reg = <0>;
+	};
+};
+
+&pinctrl0 {
+	pinctrl_gpio0_default: gpio0-default {
+		mux {
+			groups = "gpio0_20_grp", "gpio0_32_grp";
+			function = "gpio0";
+		};
+
+		conf {
+			groups = "gpio0_20_grp", "gpio0_32_grp";
+			io-standard = <3>;
+			slew-rate = <0>;
+		};
+
+		conf-pull-up {
+			pins = "MIO20", "MIO32";
+			bias-disable;
+		};
+	};
+
+	pinctrl_sdhci0_default: sdhci0-default {
+		mux {
+			groups = "sdio0_2_grp";
+			function = "sdio0";
+		};
+
+		conf {
+			groups = "sdio0_2_grp";
+			io-standard = <3>;
+			slew-rate = <0>;
+			bias-disable;
+		};
+
+		mux-cd {
+			groups = "gpio0_34_grp";
+			function = "sdio0_cd";
+		};
+
+		conf-cd {
+			groups = "gpio0_34_grp";
+			io-standard = <3>;
+			slew-rate = <0>;
+			bias-high-impedance;
+			bias-pull-up;
+		};
+	};
+
+	pinctrl_uart1_default: uart1-default {
+		mux {
+			groups = "uart1_4_grp";
+			function = "uart1";
+		};
+
+		conf {
+			groups = "uart1_4_grp";
+			io-standard = <3>;
+			slew-rate = <0>;
+		};
+
+		conf-rx {
+			pins = "MIO25";
+			bias-high-impedance;
+		};
+
+		conf-tx {
+			pins = "MIO24";
+			bias-disable;
+		};
+	};
+};
+
+&smcc {
+	status = "okay";
+};
+
+&sdhci0 {
+	status = "okay";
+	disable-wp;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_sdhci0_default>;
+};
+
+&uart1 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_uart1_default>;
+};

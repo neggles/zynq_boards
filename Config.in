@@ -1,0 +1,5 @@
+source "$BR2_EXTERNAL_ZYNQ_NEGGLES_PATH/board/ebaz4205/Config.in"
+source "$BR2_EXTERNAL_ZYNQ_NEGGLES_PATH/board/s9miner/Config.in"
+
+#config ZYNQ_NEGGLES_BOOT_MODE
+
